@@ -4,7 +4,7 @@
 //   - An empty state with a "Create your first project" prompt, or
 //   - A list of existing projects with a "New project" button.
 
-import { listProjects, getPlotCount } from '../db.js';
+import { listProjects, getPlotCount, getProjectTreeCount } from '../db.js';
 
 /**
  * Render the projects list view into the given container element.
@@ -64,6 +64,7 @@ async function renderPopulatedList(container, projects, navigate) {
   list.className = 'project-list';
   for (const project of projects) {
     const plotCount = await getPlotCount(project.id);
+    const treeCount = await getProjectTreeCount(project.id);
     const card = document.createElement('li');
     card.className = 'project-card';
     card.dataset.projectId = String(project.id);
@@ -76,6 +77,11 @@ async function renderPopulatedList(container, projects, navigate) {
         <div class="project-card__plot-count">
           ${plotCount} ${plotCount === 1 ? 'plot' : 'plots'}
         </div>
+        ${treeCount > 0 ? `
+          <div class="project-card__tree-count">
+            ${treeCount} ${treeCount === 1 ? 'tree' : 'trees'}
+          </div>
+        ` : ''}
         <div class="project-card__access">${formatAccessType(project.access_type)}</div>
       </div>
     `;

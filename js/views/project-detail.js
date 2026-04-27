@@ -1,14 +1,21 @@
 // Project detail view.
 //
 // Shown when the user taps a project card on the projects list.
-// Displays project metadata and the list of plots within it.
-// At this build stage, plots cannot yet be added — that comes in step 4.
+// Displays:
+//   - Project metadata (access, plot config, notes)
+//   - PROJECT ROLLUP METRICS — aggregate across all plots and trees:
+//       Total trees, mean BA/acre with SE, mean TPA with SE, species count
+//   - SPECIES COMPOSITION — top species by basal area share
+//   - Plot list with per-plot inline metrics so Sam can scan progress
+//   - Action menu (edit/delete project)
 
 import {
   getProject,
-  listPlotsForProject,
+  getProjectPlotsWithTrees,
   deleteProject,
 } from '../db.js';
+import { computeProjectSummary } from '../compute/project-metrics.js';
+import { computePlotSummary, fmt } from '../compute/plot-metrics.js';
 
 export async function renderProjectDetail(container, navigate, params) {
   const projectId = params?.id;
@@ -34,7 +41,8 @@ export async function renderProjectDetail(container, navigate, params) {
     return;
   }
 
-  const plots = await listPlotsForProject(projectId);
+  const plotsWithTrees = await getProjectPlotsWithTrees(projectId);
+  const summary = computeProjectSummary(plotsWithTrees, project.plot_radius_ft);
 
   const view = document.createElement('section');
   view.className = 'view view--detail';
@@ -85,24 +93,28 @@ export async function renderProjectDetail(container, navigate, params) {
       </div>
     ` : ''}
 
+    <!-- Project rollup dashboard -->
+    ${summary.total_plots > 0 ? renderRollupDashboard(summary) : ''}
+
+    <!-- Plot list section -->
     <div class="detail-section">
       <div class="detail-section__header">
         <h3 class="detail-section__title">
-          Plots <span class="detail-section__count">${plots.length}</span>
+          Plots <span class="detail-section__count">${summary.total_plots}</span>
         </h3>
         <button class="btn btn--primary" id="add-plot-btn">
           + Add plot
         </button>
       </div>
 
-      ${plots.length === 0 ? `
+      ${plotsWithTrees.length === 0 ? `
         <div class="detail-empty">
           <p>No plots yet. Tap <strong>+ Add plot</strong> to capture your first one.</p>
         </div>
-      ` : renderPlotsList(plots)}
+      ` : renderPlotsList(plotsWithTrees, project.plot_radius_ft)}
     </div>
 
-    <!-- Actions menu (hidden by default, toggled by the menu button) -->
+    <!-- Action menu -->
     <div class="action-menu" id="action-menu" hidden>
       <button class="action-menu__item" id="edit-project-btn">
         Edit project
@@ -119,12 +131,10 @@ export async function renderProjectDetail(container, navigate, params) {
     .getElementById('back-btn')
     .addEventListener('click', () => navigate('projects-list'));
 
-  // Add plot
   document
     .getElementById('add-plot-btn')
     .addEventListener('click', () => navigate('plot-create', { projectId }));
 
-  // Plot cards — navigate to plot detail on tap
   for (const card of document.querySelectorAll('.plot-card[data-plot-id]')) {
     card.addEventListener('click', () => {
       const plotId = Number(card.dataset.plotId);
@@ -139,17 +149,14 @@ export async function renderProjectDetail(container, navigate, params) {
     ev.stopPropagation();
     menu.hidden = !menu.hidden;
   });
-  // Close menu on outside click
   document.addEventListener('click', () => {
     menu.hidden = true;
   });
 
-  // Edit
   document
     .getElementById('edit-project-btn')
     .addEventListener('click', () => navigate('project-edit', { id: projectId }));
 
-  // Delete (with confirmation)
   document
     .getElementById('delete-project-btn')
     .addEventListener('click', async () => {
@@ -167,12 +174,95 @@ export async function renderProjectDetail(container, navigate, params) {
     });
 }
 
-function renderPlotsList(plots) {
+// ---------------------------------------------------------------------------
+// Project rollup dashboard
+// ---------------------------------------------------------------------------
+
+function renderRollupDashboard(s) {
+  const completionLabel = s.complete_plots === s.total_plots
+    ? 'All plots complete'
+    : `${s.complete_plots} of ${s.total_plots} plots complete`;
+
+  return `
+    <div class="rollup">
+      <div class="rollup__header">
+        <h3 class="rollup__title">Project rollup</h3>
+        <div class="rollup__caveat">Includes all plots — ${completionLabel}</div>
+      </div>
+
+      <div class="rollup-grid">
+        <div class="rollup-metric">
+          <div class="rollup-metric__value">${s.total_trees}</div>
+          <div class="rollup-metric__label">Total trees</div>
+        </div>
+        <div class="rollup-metric">
+          <div class="rollup-metric__value">${fmt(s.mean_tpa, 0)}</div>
+          <div class="rollup-metric__label">Mean TPA</div>
+          ${s.total_plots > 1 ? `
+            <div class="rollup-metric__se">&plusmn; ${fmt(s.se_tpa, 0)} SE</div>
+          ` : ''}
+        </div>
+        <div class="rollup-metric">
+          <div class="rollup-metric__value">${fmt(s.mean_ba, 1)}</div>
+          <div class="rollup-metric__label">Mean BA / acre</div>
+          ${s.total_plots > 1 ? `
+            <div class="rollup-metric__se">&plusmn; ${fmt(s.se_ba, 1)} SE</div>
+          ` : ''}
+        </div>
+        <div class="rollup-metric">
+          <div class="rollup-metric__value">${s.species_count}</div>
+          <div class="rollup-metric__label">Species</div>
+        </div>
+      </div>
+
+      ${s.species_composition.length > 0 ? renderSpeciesComposition(s.species_composition) : ''}
+    </div>
+  `;
+}
+
+function renderSpeciesComposition(composition) {
+  const top = composition.slice(0, 5);
+  const rows = top.map((sp) => {
+    const sharePercent = (sp.ba_share * 100).toFixed(0);
+    return `
+      <li class="species-row">
+        <div class="species-row__main">
+          <div class="species-row__name">${escapeHtml(sp.species_label)}</div>
+          <div class="species-row__count">${sp.count} ${sp.count === 1 ? 'tree' : 'trees'}</div>
+        </div>
+        <div class="species-row__bar-wrap">
+          <div class="species-row__bar" style="width: ${sharePercent}%"></div>
+        </div>
+        <div class="species-row__share">${sharePercent}%</div>
+      </li>
+    `;
+  }).join('');
+  const remaining = composition.length - top.length;
+
+  return `
+    <div class="species-composition">
+      <div class="species-composition__title">Top species by basal area</div>
+      <ul class="species-list">${rows}</ul>
+      ${remaining > 0 ? `
+        <div class="species-composition__more">
+          + ${remaining} more ${remaining === 1 ? 'species' : 'species'}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Plot list with inline per-plot metrics
+// ---------------------------------------------------------------------------
+
+function renderPlotsList(plots, plotRadiusFt) {
   // Newest first
   const sorted = [...plots].sort((a, b) =>
     (b.created_at || '').localeCompare(a.created_at || '')
   );
   const items = sorted.map((p) => {
+    const ps = computePlotSummary(p.trees || [], plotRadiusFt);
     const date = p.created_at
       ? new Date(p.created_at).toLocaleDateString(undefined, {
           year: 'numeric',
@@ -184,14 +274,32 @@ function renderPlotsList(plots) {
       ? formatForestTypeShort(p.forest_type)
       : 'Unspecified type';
     const statusLabel = p.status === 'complete' ? 'Complete' : 'In progress';
+    const statusClass = p.status === 'complete' ? 'complete' : 'in-progress';
+
     return `
-      <li class="plot-card" data-plot-id="${p.id}">
+      <li class="plot-card plot-card--detailed" data-plot-id="${p.id}">
         <div class="plot-card__main">
-          <div class="plot-card__id">Plot ${escapeHtml(String(p.id))}</div>
+          <div class="plot-card__id-row">
+            <div class="plot-card__id">Plot ${escapeHtml(String(p.id))}</div>
+            <div class="plot-card__status plot-card__status--${statusClass}">${statusLabel}</div>
+          </div>
           <div class="plot-card__meta">${escapeHtml(forestLabel)} &middot; ${escapeHtml(date)}</div>
-        </div>
-        <div class="plot-card__status plot-card__status--${p.status === 'complete' ? 'complete' : 'in-progress'}">
-          ${statusLabel}
+          <div class="plot-card__metrics">
+            <span class="plot-card__metric">
+              <strong>${ps.tree_count}</strong> trees
+            </span>
+            <span class="plot-card__metric">
+              <strong>${fmt(ps.tpa, 0)}</strong> TPA
+            </span>
+            <span class="plot-card__metric">
+              <strong>${fmt(ps.ba_per_acre, 1)}</strong> BA/ac
+            </span>
+            ${ps.dominant_species ? `
+              <span class="plot-card__metric plot-card__metric--dominant">
+                Dominant: <strong>${escapeHtml(ps.dominant_species.species_label)}</strong>
+              </span>
+            ` : ''}
+          </div>
         </div>
       </li>
     `;
@@ -199,9 +307,10 @@ function renderPlotsList(plots) {
   return `<ul class="plot-list">${items}</ul>`;
 }
 
-// Shorten forest type code into a short readable string for plot cards.
-// Full label lookups come from data/forest-types.js but we don't import
-// it here just for shortening — keep this view dependency-light.
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function formatForestTypeShort(code) {
   const shortNames = {
     'mesic-mixed-hardwood': 'Mesic mixed hardwood',
@@ -227,7 +336,7 @@ function formatForestTypeShort(code) {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
+  if (str === null || str === undefined) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

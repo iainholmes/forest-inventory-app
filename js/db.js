@@ -165,6 +165,43 @@ export async function deletePlot(id) {
 }
 
 // ---------------------------------------------------------------------------
+// Project-level aggregations
+// ---------------------------------------------------------------------------
+
+/**
+ * Get all plots in a project together with their trees, in a single
+ * efficient pass. Returns an array of plots, each with a `trees` array.
+ *
+ * Used by project-level rollup metrics.
+ */
+export async function getProjectPlotsWithTrees(projectId) {
+  const plots = await db.plots.where('project_id').equals(projectId).toArray();
+  if (plots.length === 0) return [];
+  const plotIds = plots.map((p) => p.id);
+  const allTrees = await db.trees.where('plot_id').anyOf(plotIds).toArray();
+  // Group trees by plot_id
+  const byPlot = new Map();
+  for (const t of allTrees) {
+    if (!byPlot.has(t.plot_id)) byPlot.set(t.plot_id, []);
+    byPlot.get(t.plot_id).push(t);
+  }
+  for (const p of plots) {
+    p.trees = byPlot.get(p.id) || [];
+  }
+  return plots;
+}
+
+/**
+ * Total tree count across a project (across all plots).
+ */
+export async function getProjectTreeCount(projectId) {
+  const plots = await db.plots.where('project_id').equals(projectId).toArray();
+  if (plots.length === 0) return 0;
+  const plotIds = plots.map((p) => p.id);
+  return await db.trees.where('plot_id').anyOf(plotIds).count();
+}
+
+// ---------------------------------------------------------------------------
 // Trees
 // ---------------------------------------------------------------------------
 
