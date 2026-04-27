@@ -165,6 +165,53 @@ export async function deletePlot(id) {
 }
 
 // ---------------------------------------------------------------------------
+// Trees
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a new tree under a given plot.
+ * @param {number} plotId
+ * @param {object} data  Tree fields (species_code, dbh_in, etc.)
+ * @returns {Promise<number>} The new tree's id.
+ */
+export async function createTree(plotId, data) {
+  const tree = {
+    plot_id: plotId,
+    species_code: data.species_code,
+    species_label: data.species_label || '', // denormalized for export convenience
+    dbh_in: Number(data.dbh_in),
+    height_class: data.height_class || '',
+    height_ft: data.height_ft ? Number(data.height_ft) : null,
+    crown_class: data.crown_class || '',
+    condition: data.condition || '',
+    notes: data.notes || '',
+    created_at: new Date().toISOString(),
+  };
+  return await db.trees.add(tree);
+}
+
+/**
+ * List all trees in a plot. Returns in insertion order (id ascending).
+ */
+export async function listTreesForPlot(plotId) {
+  return await db.trees.where('plot_id').equals(plotId).sortBy('id');
+}
+
+/**
+ * Delete a single tree.
+ */
+export async function deleteTree(id) {
+  return await db.trees.delete(id);
+}
+
+/**
+ * Get tree count for a plot.
+ */
+export async function getTreeCount(plotId) {
+  return await db.trees.where('plot_id').equals(plotId).count();
+}
+
+// ---------------------------------------------------------------------------
 // Other helpers used by future build steps
 // ---------------------------------------------------------------------------
 

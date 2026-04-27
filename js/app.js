@@ -11,6 +11,9 @@ import { renderProjectCreate } from './views/project-create.js';
 import { renderProjectDetail } from './views/project-detail.js';
 import { renderProjectEdit } from './views/project-edit.js';
 import { renderPlotCreate } from './views/plot-create.js';
+import { renderPlotDetail } from './views/plot-detail.js';
+import { renderPlotEdit } from './views/plot-edit.js';
+import { renderTreeCreate } from './views/tree-create.js';
 import { requestPersistentStorage } from './db.js';
 
 // ---------------------------------------------------------------------------
@@ -62,6 +65,9 @@ const routes = {
   'project-detail': renderProjectDetail,
   'project-edit': renderProjectEdit,
   'plot-create': renderPlotCreate,
+  'plot-detail': renderPlotDetail,
+  'plot-edit': renderPlotEdit,
+  'tree-create': renderTreeCreate,
 };
 
 const appRoot = document.getElementById('app-root');

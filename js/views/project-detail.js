@@ -124,6 +124,14 @@ export async function renderProjectDetail(container, navigate, params) {
     .getElementById('add-plot-btn')
     .addEventListener('click', () => navigate('plot-create', { projectId }));
 
+  // Plot cards — navigate to plot detail on tap
+  for (const card of document.querySelectorAll('.plot-card[data-plot-id]')) {
+    card.addEventListener('click', () => {
+      const plotId = Number(card.dataset.plotId);
+      navigate('plot-detail', { id: plotId });
+    });
+  }
+
   // Menu toggle
   const menuBtn = document.getElementById('menu-btn');
   const menu = document.getElementById('action-menu');
@@ -177,7 +185,7 @@ function renderPlotsList(plots) {
       : 'Unspecified type';
     const statusLabel = p.status === 'complete' ? 'Complete' : 'In progress';
     return `
-      <li class="plot-card">
+      <li class="plot-card" data-plot-id="${p.id}">
         <div class="plot-card__main">
           <div class="plot-card__id">Plot ${escapeHtml(String(p.id))}</div>
           <div class="plot-card__meta">${escapeHtml(forestLabel)} &middot; ${escapeHtml(date)}</div>
