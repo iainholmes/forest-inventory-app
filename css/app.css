@@ -12,10 +12,13 @@
   --color-surface-alt: #ebe8df;
   --color-ink: #1a1a1a;
   --color-ink-soft: #555550;
+  --color-ink-faint: #888880;
   --color-accent: #2d4a2b;      /* deep forest green */
   --color-accent-soft: #4a7048;
+  --color-accent-pale: #d4dfd0;
   --color-warning: #8a5a00;
   --color-error: #8a2020;
+  --color-error-bg: #f5e0e0;
   --color-divider: #d8d4c8;
 
   /* Spacing */
@@ -35,6 +38,11 @@
 
   /* Touch targets */
   --touch-min: 44px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
 }
 
 * {
@@ -54,7 +62,6 @@ html, body {
 
 body {
   min-height: 100vh;
-  /* Account for iOS safe areas when installed as PWA */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
@@ -63,7 +70,7 @@ body {
   flex-direction: column;
 }
 
-/* Header */
+/* -------- Header -------- */
 
 .app-header {
   display: flex;
@@ -73,6 +80,9 @@ body {
   background: var(--color-accent);
   color: var(--color-surface);
   border-bottom: 1px solid var(--color-divider);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .app-header__brand {
@@ -103,7 +113,7 @@ body {
 .app-header__status[data-state="online"] { color: #b8e6b3; }
 .app-header__status[data-state="offline"] { color: #f0c590; }
 
-/* Main */
+/* -------- Main / view container -------- */
 
 .app-main {
   flex: 1;
@@ -113,60 +123,226 @@ body {
   padding: var(--space-5) var(--space-4);
 }
 
-/* Welcome / skeleton state */
-
-.welcome {
-  background: var(--color-surface);
-  border: 1px solid var(--color-divider);
-  border-radius: 8px;
-  padding: var(--space-5);
+.loading {
+  text-align: center;
+  color: var(--color-ink-faint);
+  padding: var(--space-6);
 }
 
-.welcome h2 {
+.view {
+  /* Each top-level view module places .view as its root element. */
+}
+
+/* -------- Empty state (no projects yet) -------- */
+
+.empty-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+}
+
+.empty-card__title {
   margin: 0 0 var(--space-3);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--color-accent);
 }
 
-.welcome p {
-  margin: 0 0 var(--space-3);
+.empty-card__body {
   color: var(--color-ink-soft);
+  margin: 0 0 var(--space-3);
+  text-align: left;
 }
 
-.welcome__status {
-  font-size: 14px;
-  padding: var(--space-3);
-  background: var(--color-surface-alt);
-  border-radius: 4px;
-  margin-top: var(--space-4);
+.empty-card__body:last-of-type {
+  margin-bottom: var(--space-5);
 }
 
-.welcome__diagnostics {
+.empty-card .btn {
+  width: 100%;
+  max-width: 320px;
+}
+
+/* -------- Projects list (populated) -------- */
+
+.list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.project-list {
   list-style: none;
   padding: 0;
-  margin: var(--space-4) 0 0;
-  font-family: var(--font-mono);
-  font-size: 13px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.welcome__diagnostics li {
-  padding: var(--space-2) 0;
-  border-bottom: 1px dashed var(--color-divider);
+.project-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
-.welcome__diagnostics li:last-child {
-  border-bottom: none;
+.project-card:active,
+.project-card--tapped {
+  background: var(--color-accent-pale);
+  transform: scale(0.99);
 }
 
-.welcome__diagnostics .check-ok { color: var(--color-accent); }
-.welcome__diagnostics .check-warn { color: var(--color-warning); }
-.welcome__diagnostics .check-fail { color: var(--color-error); }
+.project-card__main {
+  flex: 1;
+  min-width: 0;
+}
 
-/* Buttons (defined now, used later) */
+.project-card__name {
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: var(--space-1);
+  word-wrap: break-word;
+}
+
+.project-card__site {
+  font-size: 14px;
+  color: var(--color-ink-soft);
+}
+
+.project-card__meta {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.project-card__plot-count {
+  font-weight: 600;
+  color: var(--color-accent);
+  font-size: 14px;
+}
+
+.project-card__access {
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  margin-top: var(--space-1);
+}
+
+/* -------- Forms -------- */
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.form-header__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-row[hidden] {
+  display: none;
+}
+
+.form-row--split {
+  flex-direction: row;
+  gap: var(--space-4);
+}
+
+.form-row__half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--color-ink);
+}
+
+.form-required {
+  color: var(--color-error);
+}
+
+.form-input {
+  font-family: inherit;
+  font-size: 16px; /* 16px+ prevents iOS Safari from auto-zooming on focus */
+  min-height: var(--touch-min);
+  padding: var(--space-3);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  width: 100%;
+}
+
+.form-input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+  border-color: var(--color-accent);
+}
+
+.form-input--textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-help {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+.form-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* -------- Buttons -------- */
 
 button, .btn {
   font-family: inherit;
@@ -176,7 +352,7 @@ button, .btn {
   border: 1px solid var(--color-accent);
   background: var(--color-accent);
   color: var(--color-surface);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 500;
 }
@@ -185,12 +361,59 @@ button:active, .btn:active {
   background: var(--color-accent-soft);
 }
 
-button.btn--secondary {
+button:disabled, .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  /* default styling already matches */
+}
+
+.btn--secondary {
   background: var(--color-surface);
   color: var(--color-accent);
 }
 
-/* Wider screens — keep content centered, don't sprawl */
+.btn--ghost {
+  background: transparent;
+  color: var(--color-ink-soft);
+  border-color: transparent;
+  padding: var(--space-2) var(--space-3);
+  min-height: auto;
+  font-weight: 500;
+}
+
+.btn--ghost:active {
+  background: var(--color-surface-alt);
+}
+
+.btn--danger {
+  background: var(--color-error);
+  border-color: var(--color-error);
+}
+
+/* -------- Error banner -------- */
+
+.error-banner {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-error);
+}
+
+.error-banner strong {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.error-banner p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* -------- Wider screens -------- */
 
 @media (min-width: 720px) {
   .app-header {
@@ -198,5 +421,15 @@ button.btn--secondary {
   }
   .app-header__title {
     font-size: 20px;
+  }
+  .empty-card {
+    padding: var(--space-8) var(--space-6);
+  }
+  .form-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .form-actions .btn {
+    min-width: 200px;
   }
 }

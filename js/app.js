@@ -1,11 +1,19 @@
 // Forest Inventory app — entry point.
-// At skeleton stage, this:
-//   1. Registers the service worker (PWA installability)
-//   2. Reports online/offline status in the header
-//   3. Runs platform diagnostics so we can verify required browser APIs work
-//      on whatever device Sam ends up using in the field.
+//
+// Responsibilities at this stage:
+//   1. Register the service worker (offline app shell)
+//   2. Maintain the online/offline status indicator in the header
+//   3. Run a minimal client-side router that swaps views into #app-root
+//   4. Request persistent storage so IndexedDB data isn't evicted
 
-const diagnostics = document.getElementById('diagnostics');
+import { renderProjectsList } from './views/projects-list.js';
+import { renderProjectCreate } from './views/project-create.js';
+import { requestPersistentStorage } from './db.js';
+
+// ---------------------------------------------------------------------------
+// Online/offline status indicator
+// ---------------------------------------------------------------------------
+
 const statusIndicator = document.getElementById('status-indicator');
 
 function setOnlineStatus() {
@@ -13,90 +21,78 @@ function setOnlineStatus() {
   statusIndicator.textContent = online ? 'Online' : 'Offline';
   statusIndicator.dataset.state = online ? 'online' : 'offline';
 }
-
 window.addEventListener('online', setOnlineStatus);
 window.addEventListener('offline', setOnlineStatus);
 setOnlineStatus();
 
-// Service worker registration.
-// Only register on https or localhost — the spec requires it.
+// ---------------------------------------------------------------------------
+// Service worker registration
+// ---------------------------------------------------------------------------
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('./service-worker.js')
-      .then((reg) => {
-        addDiagnostic('Service worker', 'registered', 'ok');
-        // Listen for updates and prompt user (later — not at skeleton stage)
-        reg.addEventListener('updatefound', () => {
-          // Placeholder: in v1 we'll show an update toast here.
-        });
-      })
-      .catch((err) => {
-        addDiagnostic('Service worker', `failed: ${err.message}`, 'fail');
-      });
+      .catch((err) => console.warn('Service worker registration failed:', err));
   });
-} else {
-  addDiagnostic('Service worker', 'unsupported by browser', 'fail');
 }
 
-// Platform diagnostics — verify the browser APIs we rely on are present.
-// This is dev-facing, will be hidden behind a debug flag once the app
-// has actual content.
+// Ask for persistent storage early. The browser may prompt; many platforms
+// just grant silently once the app is installed.
+requestPersistentStorage().then((granted) => {
+  if (!granted) {
+    console.info('Persistent storage not granted; data may be evicted under storage pressure.');
+  }
+});
 
-function addDiagnostic(label, value, status) {
-  if (!diagnostics) return;
-  const li = document.createElement('li');
-  const labelEl = document.createElement('span');
-  labelEl.textContent = label;
-  const valueEl = document.createElement('span');
-  valueEl.textContent = value;
-  valueEl.classList.add(`check-${status}`);
-  li.appendChild(labelEl);
-  li.appendChild(valueEl);
-  diagnostics.appendChild(li);
-}
+// ---------------------------------------------------------------------------
+// Router
+// ---------------------------------------------------------------------------
+//
+// Tiny in-memory router. No URL hash routing yet — added later if/when we
+// need shareable deep links. For now the URL stays at the app root and
+// in-app navigation is purely client-side state.
 
-// Run checks
-(function runDiagnostics() {
-  // Geolocation API — required for plot GPS capture
-  addDiagnostic(
-    'Geolocation API',
-    'geolocation' in navigator ? 'available' : 'missing',
-    'geolocation' in navigator ? 'ok' : 'fail'
-  );
+const routes = {
+  'projects-list': renderProjectsList,
+  'project-create': renderProjectCreate,
+};
 
-  // IndexedDB — required for data storage
-  addDiagnostic(
-    'IndexedDB',
-    'indexedDB' in window ? 'available' : 'missing',
-    'indexedDB' in window ? 'ok' : 'fail'
-  );
+const appRoot = document.getElementById('app-root');
 
-  // File input with capture — required for in-field photos
-  // (We can't fully test capture support without a UI, but we can check
-  //  that file inputs work in principle.)
-  const testInput = document.createElement('input');
-  testInput.type = 'file';
-  addDiagnostic(
-    'File input',
-    testInput.type === 'file' ? 'available' : 'missing',
-    testInput.type === 'file' ? 'ok' : 'fail'
-  );
-
-  // HTTPS — geolocation and several other APIs require secure context
-  addDiagnostic(
-    'Secure context',
-    window.isSecureContext ? 'yes' : 'no (geolocation will fail)',
-    window.isSecureContext ? 'ok' : 'warn'
-  );
-
-  // Persistent storage — useful for ensuring IndexedDB isn't evicted
-  if (navigator.storage && navigator.storage.persist) {
-    addDiagnostic('Storage API', 'available', 'ok');
-  } else {
-    addDiagnostic('Storage API', 'limited (data could be evicted)', 'warn');
+async function navigate(routeName, params) {
+  const handler = routes[routeName];
+  if (!handler) {
+    console.error(`Unknown route: ${routeName}`);
+    return;
   }
 
-  // App version (for debugging across deploys)
-  addDiagnostic('App version', '0.1.0 (skeleton)', 'ok');
-})();
+  // Clear current view
+  appRoot.innerHTML = '';
+  // Render new one (handlers may be async)
+  try {
+    await handler(appRoot, navigate, params);
+  } catch (err) {
+    console.error('View render failed:', err);
+    appRoot.innerHTML = `
+      <div class="error-banner">
+        <strong>Something went wrong.</strong>
+        <p>${escapeHtml(err.message || String(err))}</p>
+      </div>
+    `;
+  }
+  // Scroll to top after view change
+  window.scrollTo(0, 0);
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Initial render
+navigate('projects-list');
