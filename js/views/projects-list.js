@@ -79,13 +79,8 @@ async function renderPopulatedList(container, projects, navigate) {
         <div class="project-card__access">${formatAccessType(project.access_type)}</div>
       </div>
     `;
-    // For now, tapping a project card is a placeholder — project detail
-    // view is part of the next build step.
     card.addEventListener('click', () => {
-      // navigate('project-detail', { id: project.id });
-      // Placeholder feedback so Sam knows the tap registered:
-      card.classList.add('project-card--tapped');
-      setTimeout(() => card.classList.remove('project-card--tapped'), 200);
+      navigate('project-detail', { id: project.id });
     });
     list.appendChild(card);
   }

@@ -2,7 +2,7 @@
 // Strategy: cache-first for app shell, network-first for everything else.
 // Bumping CACHE_VERSION invalidates old caches on next activation.
 
-const CACHE_VERSION = 'forest-inv-v0.2.0';
+const CACHE_VERSION = 'forest-inv-v0.3.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -12,6 +12,8 @@ const APP_SHELL = [
   './js/db.js',
   './js/views/projects-list.js',
   './js/views/project-create.js',
+  './js/views/project-detail.js',
+  './js/views/project-edit.js',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png'

@@ -8,6 +8,8 @@
 
 import { renderProjectsList } from './views/projects-list.js';
 import { renderProjectCreate } from './views/project-create.js';
+import { renderProjectDetail } from './views/project-detail.js';
+import { renderProjectEdit } from './views/project-edit.js';
 import { requestPersistentStorage } from './db.js';
 
 // ---------------------------------------------------------------------------
@@ -56,6 +58,8 @@ requestPersistentStorage().then((granted) => {
 const routes = {
   'projects-list': renderProjectsList,
   'project-create': renderProjectCreate,
+  'project-detail': renderProjectDetail,
+  'project-edit': renderProjectEdit,
 };
 
 const appRoot = document.getElementById('app-root');

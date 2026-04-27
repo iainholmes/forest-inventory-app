@@ -413,6 +413,208 @@ button:disabled, .btn:disabled {
   font-size: 14px;
 }
 
+/* -------- Project detail view -------- */
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.detail-header__menu-btn {
+  font-size: 22px;
+  line-height: 1;
+  padding: var(--space-2) var(--space-3);
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+}
+
+.detail-title-block {
+  margin-bottom: var(--space-5);
+}
+
+.detail-title {
+  margin: 0 0 var(--space-1);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-ink);
+  word-wrap: break-word;
+}
+
+.detail-site {
+  font-size: 16px;
+  color: var(--color-ink-soft);
+}
+
+.detail-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.detail-meta__label {
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-1);
+}
+
+.detail-meta__value {
+  font-size: 15px;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.detail-notes {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.detail-notes__label {
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-2);
+}
+
+.detail-notes__body {
+  font-size: 15px;
+  color: var(--color-ink);
+  white-space: pre-wrap;
+}
+
+.detail-section {
+  margin-top: var(--space-5);
+}
+
+.detail-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.detail-section__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.detail-section__count {
+  color: var(--color-ink-faint);
+  font-weight: 400;
+  margin-left: var(--space-1);
+}
+
+.detail-section__hint {
+  font-size: 13px;
+  color: var(--color-ink-faint);
+  margin: 0 0 var(--space-3);
+}
+
+.detail-empty {
+  background: var(--color-surface);
+  border: 1px dashed var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--color-ink-soft);
+}
+
+.detail-empty p {
+  margin: 0;
+}
+
+/* -------- Plot list -------- */
+
+.plot-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.plot-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plot-card__id {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.plot-card__status {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+}
+
+/* -------- Action menu (project-level) -------- */
+
+.action-menu {
+  position: absolute;
+  top: 60px;
+  right: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.action-menu[hidden] {
+  display: none;
+}
+
+.action-menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: none;
+  border-radius: 0;
+  padding: var(--space-3) var(--space-4);
+  font-size: 15px;
+  font-weight: 400;
+  cursor: pointer;
+  min-height: var(--touch-min);
+}
+
+.action-menu__item:not(:last-child) {
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.action-menu__item:active {
+  background: var(--color-surface-alt);
+}
+
+.action-menu__item--danger {
+  color: var(--color-error);
+}
+
 /* -------- Wider screens -------- */
 
 @media (min-width: 720px) {
