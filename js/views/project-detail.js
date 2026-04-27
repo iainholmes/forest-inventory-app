@@ -90,17 +90,14 @@ export async function renderProjectDetail(container, navigate, params) {
         <h3 class="detail-section__title">
           Plots <span class="detail-section__count">${plots.length}</span>
         </h3>
-        <button class="btn btn--primary" id="add-plot-btn" disabled>
+        <button class="btn btn--primary" id="add-plot-btn">
           + Add plot
         </button>
       </div>
-      <p class="detail-section__hint">
-        Plot capture is part of the next build step. The button is here as a placeholder.
-      </p>
 
       ${plots.length === 0 ? `
         <div class="detail-empty">
-          <p>No plots yet. Once plot capture is implemented, plots you add will appear here.</p>
+          <p>No plots yet. Tap <strong>+ Add plot</strong> to capture your first one.</p>
         </div>
       ` : renderPlotsList(plots)}
     </div>
@@ -121,6 +118,11 @@ export async function renderProjectDetail(container, navigate, params) {
   document
     .getElementById('back-btn')
     .addEventListener('click', () => navigate('projects-list'));
+
+  // Add plot
+  document
+    .getElementById('add-plot-btn')
+    .addEventListener('click', () => navigate('plot-create', { projectId }));
 
   // Menu toggle
   const menuBtn = document.getElementById('menu-btn');
@@ -158,13 +160,62 @@ export async function renderProjectDetail(container, navigate, params) {
 }
 
 function renderPlotsList(plots) {
-  const items = plots.map((p) => `
-    <li class="plot-card">
-      <div class="plot-card__id">Plot ${escapeHtml(String(p.id))}</div>
-      <div class="plot-card__status">${p.status === 'complete' ? 'Complete' : 'In progress'}</div>
-    </li>
-  `).join('');
+  // Newest first
+  const sorted = [...plots].sort((a, b) =>
+    (b.created_at || '').localeCompare(a.created_at || '')
+  );
+  const items = sorted.map((p) => {
+    const date = p.created_at
+      ? new Date(p.created_at).toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        })
+      : '';
+    const forestLabel = p.forest_type
+      ? formatForestTypeShort(p.forest_type)
+      : 'Unspecified type';
+    const statusLabel = p.status === 'complete' ? 'Complete' : 'In progress';
+    return `
+      <li class="plot-card">
+        <div class="plot-card__main">
+          <div class="plot-card__id">Plot ${escapeHtml(String(p.id))}</div>
+          <div class="plot-card__meta">${escapeHtml(forestLabel)} &middot; ${escapeHtml(date)}</div>
+        </div>
+        <div class="plot-card__status plot-card__status--${p.status === 'complete' ? 'complete' : 'in-progress'}">
+          ${statusLabel}
+        </div>
+      </li>
+    `;
+  }).join('');
   return `<ul class="plot-list">${items}</ul>`;
+}
+
+// Shorten forest type code into a short readable string for plot cards.
+// Full label lookups come from data/forest-types.js but we don't import
+// it here just for shortening — keep this view dependency-light.
+function formatForestTypeShort(code) {
+  const shortNames = {
+    'mesic-mixed-hardwood': 'Mesic mixed hardwood',
+    'dry-oak-hickory': 'Dry oak-hickory',
+    'dry-mesic-oak-hickory': 'Dry-mesic oak-hickory',
+    'bottomland-hardwood': 'Bottomland hardwood',
+    'mesic-slope-forest': 'Mesic slope',
+    'loblolly-pine': 'Loblolly pine',
+    'mixed-pine-hardwood': 'Mixed pine-hardwood',
+    'early-successional': 'Early successional',
+    'riparian': 'Riparian',
+    'cove-hardwood': 'Cove hardwood',
+    'northern-hardwood': 'Northern hardwood',
+    'mesic-oak': 'Mesic oak',
+    'chestnut-oak-ridge': 'Chestnut oak ridge',
+    'dry-pine-oak': 'Dry pine-oak',
+    'hemlock': 'Hemlock',
+    'mixed-mesophytic': 'Mixed mesophytic',
+    'rhododendron-thicket': 'Rhododendron thicket',
+    'other': 'Other',
+  };
+  return shortNames[code] || code;
 }
 
 function escapeHtml(str) {

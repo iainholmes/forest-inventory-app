@@ -98,12 +98,75 @@ export async function deleteProject(id) {
 }
 
 // ---------------------------------------------------------------------------
-// Plots, trees, understory, photos
+// Plots
 // ---------------------------------------------------------------------------
-//
-// Read helpers we need now for the projects list view (showing plot counts
-// per project). Full CRUD for plots/trees/understory/photos comes in
-// later build steps.
+
+/**
+ * Create a new plot under a given project.
+ * @param {number} projectId
+ * @param {object} data  Plot fields (forest_type, slope_deg, aspect_deg, etc.)
+ * @returns {Promise<number>} The new plot's id.
+ */
+export async function createPlot(projectId, data) {
+  const now = new Date().toISOString();
+  const plot = {
+    project_id: projectId,
+    // GPS
+    lat: data.lat ?? null,
+    lon: data.lon ?? null,
+    gps_accuracy_m: data.gps_accuracy_m ?? null,
+    gps_captured_at: data.gps_captured_at ?? null,
+    // Site description
+    forest_type: data.forest_type || '',
+    slope_deg: data.slope_deg ?? null,
+    aspect_deg: data.aspect_deg ?? null,
+    topographic_position: data.topographic_position || '',
+    disturbance_codes: data.disturbance_codes || [],
+    notes: data.notes || '',
+    // Workflow
+    status: data.status || 'in_progress',
+    created_at: now,
+    updated_at: now,
+    completed_at: null,
+  };
+  return await db.plots.add(plot);
+}
+
+/**
+ * Get a single plot by id.
+ */
+export async function getPlot(id) {
+  return await db.plots.get(id);
+}
+
+/**
+ * Update a plot's fields. Only the keys present in `updates` are changed.
+ */
+export async function updatePlot(id, updates) {
+  const next = { ...updates, updated_at: new Date().toISOString() };
+  return await db.plots.update(id, next);
+}
+
+/**
+ * Delete a plot AND all of its trees, understory, and photos.
+ * Hard delete; no undo. Wrapped in a transaction.
+ */
+export async function deletePlot(id) {
+  return await db.transaction(
+    'rw',
+    [db.plots, db.trees, db.understory, db.photos],
+    async () => {
+      await db.trees.where('plot_id').equals(id).delete();
+      await db.understory.where('plot_id').equals(id).delete();
+      await db.photos.where('plot_id').equals(id).delete();
+      await db.plots.delete(id);
+    }
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Other helpers used by future build steps
+// ---------------------------------------------------------------------------
 
 export async function listPlotsForProject(projectId) {
   return await db.plots.where('project_id').equals(projectId).toArray();

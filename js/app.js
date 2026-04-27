@@ -10,6 +10,7 @@ import { renderProjectsList } from './views/projects-list.js';
 import { renderProjectCreate } from './views/project-create.js';
 import { renderProjectDetail } from './views/project-detail.js';
 import { renderProjectEdit } from './views/project-edit.js';
+import { renderPlotCreate } from './views/plot-create.js';
 import { requestPersistentStorage } from './db.js';
 
 // ---------------------------------------------------------------------------
@@ -60,6 +61,7 @@ const routes = {
   'project-create': renderProjectCreate,
   'project-detail': renderProjectDetail,
   'project-edit': renderProjectEdit,
+  'plot-create': renderPlotCreate,
 };
 
 const appRoot = document.getElementById('app-root');
