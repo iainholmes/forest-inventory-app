@@ -1,0 +1,21 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (in case we ever add tooling)
+node_modules/
+npm-debug.log*
+
+# Python (local dev server, scripts)
+__pycache__/
+*.pyc
+.venv/
+
+# Logs
+*.log

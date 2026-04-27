@@ -1,0 +1,202 @@
+/* Forest Inventory app styles.
+   Mobile-first. Designed for outdoor readability:
+   - High contrast (dark text on warm off-white)
+   - Generous touch targets (min 44px)
+   - Restrained palette so important UI stands out
+*/
+
+:root {
+  /* Palette */
+  --color-bg: #f5f3ee;          /* warm off-white, easier on eyes than pure white in sun */
+  --color-surface: #ffffff;
+  --color-surface-alt: #ebe8df;
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #555550;
+  --color-accent: #2d4a2b;      /* deep forest green */
+  --color-accent-soft: #4a7048;
+  --color-warning: #8a5a00;
+  --color-error: #8a2020;
+  --color-divider: #d8d4c8;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', Menlo, Consolas, monospace;
+  --font-size-base: 16px;
+  --line-height-base: 1.5;
+
+  /* Touch targets */
+  --touch-min: 44px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  /* Account for iOS safe areas when installed as PWA */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-header__icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.app-header__title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.app-header__status {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.app-header__status[data-state="online"] { color: #b8e6b3; }
+.app-header__status[data-state="offline"] { color: #f0c590; }
+
+/* Main */
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+}
+
+/* Welcome / skeleton state */
+
+.welcome {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: 8px;
+  padding: var(--space-5);
+}
+
+.welcome h2 {
+  margin: 0 0 var(--space-3);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.welcome p {
+  margin: 0 0 var(--space-3);
+  color: var(--color-ink-soft);
+}
+
+.welcome__status {
+  font-size: 14px;
+  padding: var(--space-3);
+  background: var(--color-surface-alt);
+  border-radius: 4px;
+  margin-top: var(--space-4);
+}
+
+.welcome__diagnostics {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.welcome__diagnostics li {
+  padding: var(--space-2) 0;
+  border-bottom: 1px dashed var(--color-divider);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.welcome__diagnostics li:last-child {
+  border-bottom: none;
+}
+
+.welcome__diagnostics .check-ok { color: var(--color-accent); }
+.welcome__diagnostics .check-warn { color: var(--color-warning); }
+.welcome__diagnostics .check-fail { color: var(--color-error); }
+
+/* Buttons (defined now, used later) */
+
+button, .btn {
+  font-family: inherit;
+  font-size: 16px;
+  min-height: var(--touch-min);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button:active, .btn:active {
+  background: var(--color-accent-soft);
+}
+
+button.btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-accent);
+}
+
+/* Wider screens — keep content centered, don't sprawl */
+
+@media (min-width: 720px) {
+  .app-header {
+    padding: var(--space-4) var(--space-5);
+  }
+  .app-header__title {
+    font-size: 20px;
+  }
+}
