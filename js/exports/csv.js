@@ -19,10 +19,11 @@ import {
   db,
   getProjectPlotsWithTrees,
   getUnderstoryForPlot,
-} from './db.js';
-import { computePlotSummary } from './compute/plot-metrics.js';
-import { findSpeciesByCode } from '../data/species-index.js';
-import { getCoverClassLabel } from '../data/cover-classes.js';
+} from '../db.js';
+
+import { computePlotSummary } from '../compute/plot-metrics.js';
+import { findSpeciesByCode } from '../../data/species-index.js';
+import { getCoverClassLabel } from '../../data/cover-classes.js';
 
 // ---------------------------------------------------------------------------
 // Public API
