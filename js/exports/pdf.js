@@ -22,11 +22,11 @@
 //   - Single-column body
 //   - Tabular numerics so figures align column-wise when readers scan
 
-import { db, getProjectPlotsWithTrees, getUnderstoryForPlot } from './db.js';
-import { computePlotSummary } from './compute/plot-metrics.js';
-import { computeProjectSummary } from './compute/project-metrics.js';
-import { findSpeciesByCode } from '../data/species-index.js';
-import { getCoverClassLabel } from '../data/cover-classes.js';
+import { db, getProjectPlotsWithTrees, getUnderstoryForPlot } from '../db.js';
+import { computePlotSummary } from '../compute/plot-metrics.js';
+import { computeProjectSummary } from '../compute/project-metrics.js';
+import { findSpeciesByCode } from '../../data/species-index.js';
+import { getCoverClassLabel } from '../../data/cover-classes.js';
 
 // jsPDF as ES module
 import { jsPDF } from 'https://unpkg.com/jspdf@2.5.2/dist/jspdf.es.min.js';
