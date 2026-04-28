@@ -18,8 +18,8 @@
 import {
   db,
   getProjectPlotsWithTrees,
-} from './db.js';
-import { computePlotSummary } from './compute/plot-metrics.js';
+} from '../db.js';
+import { computePlotSummary } from '../compute/plot-metrics.js';
 
 // ---------------------------------------------------------------------------
 // Public API
