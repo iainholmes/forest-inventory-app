@@ -29,7 +29,7 @@ import { findSpeciesByCode } from '../../data/species-index.js';
 import { getCoverClassLabel } from '../../data/cover-classes.js';
 
 // jsPDF as ES module
-import { jsPDF } from 'https://unpkg.com/jspdf@2.5.2/dist/jspdf.es.min.js';
+const { jsPDF } = window.jspdf;
 
 // ---------------------------------------------------------------------------
 // Layout constants
