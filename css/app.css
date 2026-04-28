@@ -1689,3 +1689,113 @@ button:disabled, .btn:disabled {
   color: var(--color-ink-soft);
   margin: 0 0 var(--space-2);
 }
+
+/* ===========================================================================
+   Step 8 additions: settings, backup/restore UI
+   =========================================================================== */
+
+/* Heading actions on projects list */
+.list-heading__actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+#settings-btn {
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Empty-state import affordance */
+.empty-card__alt {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-divider);
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  text-align: center;
+}
+
+.empty-card__alt a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Settings page: data summary */
+.data-summary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.data-summary__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.data-summary__label {
+  font-size: 14px;
+  color: var(--color-ink-soft);
+}
+
+.data-summary__value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Form status messages (used in import/export feedback) */
+.form-status {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  background: var(--color-surface-alt);
+  color: var(--color-ink-soft);
+  line-height: 1.5;
+}
+
+.form-status--success {
+  background: var(--color-accent-pale);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-soft);
+}
+
+.form-status--error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.form-status div + div {
+  margin-top: var(--space-1);
+}
+
+/* Import file input wrapper acts as a button */
+.import-btn-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Bottom meta on settings page */
+.settings-meta {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-divider);
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  line-height: 1.5;
+}

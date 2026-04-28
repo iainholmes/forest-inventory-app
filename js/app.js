@@ -16,6 +16,7 @@ import { renderPlotEdit } from './views/plot-edit.js';
 import { renderTreeCreate } from './views/tree-create.js';
 import { renderUnderstoryEdit } from './views/understory-edit.js';
 import { renderPhotos } from './views/photos.js';
+import { renderSettings } from './views/settings.js';
 import { requestPersistentStorage } from './db.js';
 
 // ---------------------------------------------------------------------------
@@ -72,6 +73,7 @@ const routes = {
   'tree-create': renderTreeCreate,
   'understory-edit': renderUnderstoryEdit,
   'photos': renderPhotos,
+  'settings': renderSettings,
 };
 
 const appRoot = document.getElementById('app-root');

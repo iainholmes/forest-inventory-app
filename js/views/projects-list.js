@@ -38,24 +38,39 @@ function renderEmptyState(container, navigate) {
       <button class="btn btn--primary" id="create-first-project-btn">
         Create your first project
       </button>
+      <p class="empty-card__alt">
+        Have a backup file from another device?
+        <a href="#" id="empty-import-link">Import a backup</a>.
+      </p>
     </div>
   `;
   container.appendChild(view);
   document
     .getElementById('create-first-project-btn')
     .addEventListener('click', () => navigate('project-create'));
+  document
+    .getElementById('empty-import-link')
+    .addEventListener('click', (ev) => {
+      ev.preventDefault();
+      navigate('settings');
+    });
 }
 
 async function renderPopulatedList(container, projects, navigate) {
   const view = document.createElement('section');
   view.className = 'view view--list';
 
-  // Heading and "New project" button
+  // Heading with "New project" button + settings cog
   const heading = document.createElement('div');
   heading.className = 'list-heading';
   heading.innerHTML = `
     <h2 class="list-heading__title">Projects</h2>
-    <button class="btn btn--primary" id="new-project-btn">+ New project</button>
+    <div class="list-heading__actions">
+      <button class="btn btn--primary" id="new-project-btn">+ New project</button>
+      <button class="btn btn--ghost" id="settings-btn" aria-label="Settings" title="Settings &amp; backup">
+        &#9881;
+      </button>
+    </div>
   `;
   view.appendChild(heading);
 
@@ -96,6 +111,10 @@ async function renderPopulatedList(container, projects, navigate) {
   document
     .getElementById('new-project-btn')
     .addEventListener('click', () => navigate('project-create'));
+
+  document
+    .getElementById('settings-btn')
+    .addEventListener('click', () => navigate('settings'));
 }
 
 // Tiny utilities — kept inline rather than spinning up a utils module
