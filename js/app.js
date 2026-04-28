@@ -14,6 +14,8 @@ import { renderPlotCreate } from './views/plot-create.js';
 import { renderPlotDetail } from './views/plot-detail.js';
 import { renderPlotEdit } from './views/plot-edit.js';
 import { renderTreeCreate } from './views/tree-create.js';
+import { renderUnderstoryEdit } from './views/understory-edit.js';
+import { renderPhotos } from './views/photos.js';
 import { requestPersistentStorage } from './db.js';
 
 // ---------------------------------------------------------------------------
@@ -68,6 +70,8 @@ const routes = {
   'plot-detail': renderPlotDetail,
   'plot-edit': renderPlotEdit,
   'tree-create': renderTreeCreate,
+  'understory-edit': renderUnderstoryEdit,
+  'photos': renderPhotos,
 };
 
 const appRoot = document.getElementById('app-root');

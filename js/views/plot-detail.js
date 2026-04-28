@@ -15,9 +15,13 @@ import {
   deleteTree,
   deletePlot,
   updatePlot,
+  getUnderstoryForPlot,
+  listPhotosForPlot,
+  getPhotoCount,
 } from '../db.js';
 import { computePlotSummary, fmt } from '../compute/plot-metrics.js';
 import { findSpeciesByCode } from '../../data/species-index.js';
+import { getCoverClassLabel } from '../../data/cover-classes.js';
 
 export async function renderPlotDetail(container, navigate, params) {
   const plotId = params?.id;
@@ -40,10 +44,13 @@ export async function renderPlotDetail(container, navigate, params) {
   const project = await getProject(plot.project_id);
   const trees = await listTreesForPlot(plotId);
   const summary = computePlotSummary(trees, project.plot_radius_ft);
+  const understory = await getUnderstoryForPlot(plotId);
+  const photoCount = await getPhotoCount(plotId);
+  const photos = photoCount > 0 ? await listPhotosForPlot(plotId) : [];
 
   const view = document.createElement('section');
   view.className = 'view view--detail';
-  view.appendChild(buildView(plot, project, trees, summary));
+  view.appendChild(buildView(plot, project, trees, summary, understory, photos));
   container.appendChild(view);
 
   // Wire up handlers
@@ -112,9 +119,25 @@ export async function renderPlotDetail(container, navigate, params) {
       renderPlotDetail(container, navigate, params);
     });
   }
+
+  // Understory edit
+  const understoryBtn = document.getElementById('edit-understory-btn');
+  if (understoryBtn) {
+    understoryBtn.addEventListener('click', () => {
+      navigate('understory-edit', { plotId });
+    });
+  }
+
+  // Photos
+  const photosBtn = document.getElementById('manage-photos-btn');
+  if (photosBtn) {
+    photosBtn.addEventListener('click', () => {
+      navigate('photos', { plotId });
+    });
+  }
 }
 
-function buildView(plot, project, trees, summary) {
+function buildView(plot, project, trees, summary, understory, photos) {
   const wrapper = document.createElement('div');
 
   const gpsBlock = plot.lat != null
@@ -239,6 +262,38 @@ function buildView(plot, project, trees, summary) {
       ` : renderTreesList(trees)}
     </div>
 
+    <!-- Understory section -->
+    <div class="detail-section">
+      <div class="detail-section__header">
+        <h3 class="detail-section__title">Understory</h3>
+        <button class="btn btn--secondary" id="edit-understory-btn">
+          ${understory ? 'Edit' : '+ Add'}
+        </button>
+      </div>
+      ${understory ? renderUnderstorySummary(understory) : `
+        <div class="detail-empty">
+          <p>No understory recorded. Tap <strong>+ Add</strong> to capture regeneration, shrub layer, herbaceous cover, and invasives.</p>
+        </div>
+      `}
+    </div>
+
+    <!-- Photos section -->
+    <div class="detail-section">
+      <div class="detail-section__header">
+        <h3 class="detail-section__title">
+          Photos <span class="detail-section__count">${photos.length}</span>
+        </h3>
+        <button class="btn btn--secondary" id="manage-photos-btn">
+          ${photos.length > 0 ? 'Manage' : '+ Add'}
+        </button>
+      </div>
+      ${photos.length > 0 ? renderPhotoStripPlaceholder(photos) : `
+        <div class="detail-empty">
+          <p>No photos yet. Tap <strong>+ Add</strong> to capture cardinal-direction photos and additional shots.</p>
+        </div>
+      `}
+    </div>
+
     <!-- Action menu -->
     <div class="action-menu" id="action-menu" hidden>
       <button class="action-menu__item" id="edit-plot-btn">
@@ -253,6 +308,71 @@ function buildView(plot, project, trees, summary) {
     </div>
   `;
   return wrapper;
+}
+
+function renderUnderstorySummary(u) {
+  const rows = [];
+  if (u.regeneration_dominant || u.regeneration_cover) {
+    rows.push({
+      label: 'Regeneration',
+      dom: u.regeneration_dominant,
+      cover: u.regeneration_cover,
+    });
+  }
+  if (u.shrub_dominant || u.shrub_cover) {
+    rows.push({
+      label: 'Shrub layer',
+      dom: u.shrub_dominant,
+      cover: u.shrub_cover,
+    });
+  }
+  if (u.herbaceous_dominant || u.herbaceous_cover) {
+    rows.push({
+      label: 'Herbaceous',
+      dom: u.herbaceous_dominant,
+      cover: u.herbaceous_cover,
+    });
+  }
+  if (rows.length === 0 && !u.invasive_present && !u.notes) {
+    return `<div class="detail-empty"><p>Understory record exists but is empty.</p></div>`;
+  }
+  return `
+    <div class="understory-summary">
+      ${rows.map((r) => `
+        <div class="understory-row">
+          <div class="understory-row__label">${escapeHtml(r.label)}</div>
+          <div class="understory-row__main">
+            ${r.dom ? `<div class="understory-row__dom">${escapeHtml(r.dom)}</div>` : ''}
+            ${r.cover ? `<div class="understory-row__cover">${escapeHtml(getCoverClassLabel(r.cover))}</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+      ${u.invasive_present ? `
+        <div class="understory-invasives">
+          <strong>Invasives present:</strong> ${escapeHtml(u.invasive_species || 'noted')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderPhotoStripPlaceholder(photos) {
+  // Lightweight strip showing direction labels — full gallery on tap of Manage.
+  const dirs = ['N', 'E', 'S', 'W'];
+  const haveDirs = new Set(photos.map((p) => p.direction).filter(Boolean));
+  const additionalCount = photos.filter((p) => !dirs.includes(p.direction)).length;
+  return `
+    <div class="photo-strip-placeholder">
+      ${dirs.map((d) => `
+        <div class="photo-strip-tile photo-strip-tile--${haveDirs.has(d) ? 'have' : 'missing'}">
+          ${d}
+        </div>
+      `).join('')}
+      ${additionalCount > 0 ? `
+        <div class="photo-strip-extra">+ ${additionalCount} more</div>
+      ` : ''}
+    </div>
+  `;
 }
 
 function renderTreesList(trees) {

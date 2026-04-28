@@ -202,6 +202,98 @@ export async function getProjectTreeCount(projectId) {
 }
 
 // ---------------------------------------------------------------------------
+// Understory
+// ---------------------------------------------------------------------------
+//
+// One understory record per plot (1:1, enforced by &plot_id unique index).
+// Captures regeneration, shrub layer, herbaceous layer, and invasives.
+
+/**
+ * Insert or replace the understory record for a plot.
+ */
+export async function upsertUnderstory(plotId, data) {
+  const existing = await db.understory.where('plot_id').equals(plotId).first();
+  const record = {
+    plot_id: plotId,
+    regeneration_dominant: data.regeneration_dominant || '',
+    regeneration_cover: data.regeneration_cover || '',
+    shrub_dominant: data.shrub_dominant || '',
+    shrub_cover: data.shrub_cover || '',
+    herbaceous_dominant: data.herbaceous_dominant || '',
+    herbaceous_cover: data.herbaceous_cover || '',
+    invasive_present: !!data.invasive_present,
+    invasive_species: data.invasive_species || '',
+    notes: data.notes || '',
+    updated_at: new Date().toISOString(),
+  };
+  if (existing) {
+    return await db.understory.update(existing.id, record);
+  } else {
+    record.created_at = record.updated_at;
+    return await db.understory.add(record);
+  }
+}
+
+export async function getUnderstoryForPlot(plotId) {
+  return await db.understory.where('plot_id').equals(plotId).first();
+}
+
+// ---------------------------------------------------------------------------
+// Photos
+// ---------------------------------------------------------------------------
+//
+// Photos are stored as Blobs in IndexedDB. We store both a full-resolution
+// Blob and a thumbnail Blob. The thumbnail is what's rendered in lists and
+// future map views; the full-res is shown when the user taps to expand.
+//
+// Cardinal-direction photos (N/E/S/W) are first-class — Sam captures one
+// in each direction at plot center. Additional photos can be added with
+// captions.
+
+/**
+ * Add a photo to a plot.
+ *
+ * @param {number} plotId
+ * @param {Blob} fullBlob       Original-resolution photo
+ * @param {Blob} thumbBlob      Thumbnail generated at capture
+ * @param {object} meta          { direction, caption, lat, lon }
+ */
+export async function addPhoto(plotId, fullBlob, thumbBlob, meta = {}) {
+  const photo = {
+    plot_id: plotId,
+    blob: fullBlob,
+    thumb: thumbBlob,
+    direction: meta.direction || '',
+    caption: meta.caption || '',
+    lat: meta.lat ?? null,
+    lon: meta.lon ?? null,
+    captured_at: new Date().toISOString(),
+  };
+  return await db.photos.add(photo);
+}
+
+/**
+ * List photos for a plot, in capture order.
+ */
+export async function listPhotosForPlot(plotId) {
+  return await db.photos.where('plot_id').equals(plotId).sortBy('id');
+}
+
+/**
+ * Get the count of photos in a plot.
+ */
+export async function getPhotoCount(plotId) {
+  return await db.photos.where('plot_id').equals(plotId).count();
+}
+
+/**
+ * Delete a photo by id.
+ */
+export async function deletePhoto(id) {
+  return await db.photos.delete(id);
+}
+
+// ---------------------------------------------------------------------------
 // Trees
 // ---------------------------------------------------------------------------
 
