@@ -16,6 +16,8 @@ import {
 } from '../db.js';
 import { computeProjectSummary } from '../compute/project-metrics.js';
 import { computePlotSummary, fmt } from '../compute/plot-metrics.js';
+import { downloadGeoJson } from '../exports/geojson.js';
+import { downloadProjectPdf } from '../exports/pdf.js';
 
 export async function renderProjectDetail(container, navigate, params) {
   const projectId = params?.id;
@@ -119,6 +121,12 @@ export async function renderProjectDetail(container, navigate, params) {
       <button class="action-menu__item" id="edit-project-btn">
         Edit project
       </button>
+      <button class="action-menu__item" id="export-pdf-btn">
+        Export PDF report
+      </button>
+      <button class="action-menu__item" id="export-geojson-btn">
+        Export GeoJSON
+      </button>
       <button class="action-menu__item action-menu__item--danger" id="delete-project-btn">
         Delete project
       </button>
@@ -156,6 +164,40 @@ export async function renderProjectDetail(container, navigate, params) {
   document
     .getElementById('edit-project-btn')
     .addEventListener('click', () => navigate('project-edit', { id: projectId }));
+
+  document
+    .getElementById('export-pdf-btn')
+    .addEventListener('click', async () => {
+      menu.hidden = true;
+      try {
+        // Show a quick "generating" toast via the menu button label change
+        const btn = document.getElementById('menu-btn');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '…';
+        await downloadProjectPdf(projectId);
+        btn.innerHTML = orig;
+      } catch (err) {
+        console.error('PDF export failed:', err);
+        window.alert(`Could not generate PDF: ${err.message || 'unknown error'}.`);
+      }
+    });
+
+  document
+    .getElementById('export-geojson-btn')
+    .addEventListener('click', async () => {
+      menu.hidden = true;
+      try {
+        const fc = await downloadGeoJson(projectId);
+        const plotCount = fc.features.length / 2;
+        // Lightweight toast — alert is fine here, infrequent action
+        if (plotCount === 0) {
+          window.alert('No plots with GPS coordinates yet — nothing to export.');
+        }
+      } catch (err) {
+        console.error('GeoJSON export failed:', err);
+        window.alert(`Could not export GeoJSON: ${err.message || 'unknown error'}.`);
+      }
+    });
 
   document
     .getElementById('delete-project-btn')

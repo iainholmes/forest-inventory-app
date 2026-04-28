@@ -3,6 +3,7 @@
 // Currently houses backup/restore. Future home for app-level preferences.
 
 import { downloadBackup, restoreBackup } from '../backup.js';
+import { downloadCsvExports } from '../exports/csv.js';
 import { db } from '../db.js';
 
 export async function renderSettings(container, navigate) {
@@ -86,6 +87,21 @@ export async function renderSettings(container, navigate) {
         </label>
       </div>
       <div class="form-status" id="import-status" hidden></div>
+    </div>
+
+    <!-- CSV exports for analysis -->
+    <div class="detail-section">
+      <h3 class="detail-section__title">Export CSVs for analysis</h3>
+      <p class="form-help">
+        Download three CSV files for use in R, Python, Stata, or Excel:
+        <strong>plots</strong> (one row per plot with metadata and computed metrics),
+        <strong>trees</strong> (one row per tree, joinable to plots),
+        and <strong>understory</strong> (one row per plot's understory observations).
+      </p>
+      <div class="form-actions">
+        <button class="btn btn--secondary" id="csv-export-btn">Download CSVs</button>
+      </div>
+      <div class="form-status" id="csv-status" hidden></div>
     </div>
 
     <div class="settings-meta">
@@ -172,6 +188,34 @@ export async function renderSettings(container, navigate) {
       importStatus.hidden = false;
     } finally {
       importInput.value = '';
+    }
+  });
+
+  // CSV export
+  const csvBtn = document.getElementById('csv-export-btn');
+  const csvStatus = document.getElementById('csv-status');
+  csvBtn.addEventListener('click', async () => {
+    csvBtn.disabled = true;
+    csvBtn.textContent = 'Building CSVs…';
+    csvStatus.hidden = true;
+    try {
+      const result = await downloadCsvExports();
+      csvStatus.className = 'form-status form-status--success';
+      csvStatus.innerHTML = `
+        Three CSVs downloaded:
+        <strong>${result.plots}</strong> plot rows,
+        <strong>${result.trees}</strong> tree rows,
+        <strong>${result.understory}</strong> understory rows.
+      `;
+      csvStatus.hidden = false;
+    } catch (err) {
+      console.error('CSV export failed:', err);
+      csvStatus.className = 'form-status form-status--error';
+      csvStatus.textContent = `Export failed: ${err.message || 'unknown error'}.`;
+      csvStatus.hidden = false;
+    } finally {
+      csvBtn.disabled = false;
+      csvBtn.textContent = 'Download CSVs';
     }
   });
 }
